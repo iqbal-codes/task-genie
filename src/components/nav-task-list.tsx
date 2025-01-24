@@ -1,10 +1,7 @@
-import { LucideIcon, NotebookIcon } from "lucide-react";
-import {
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-} from "./ui/sidebar";
+import { LucideIcon, NotebookIcon, PlusIcon } from "lucide-react";
+import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "./ui/sidebar";
 import { Badge } from "./ui/badge";
+import { Separator } from "./ui/separator";
 
 type TaskListType = {
   id: string;
@@ -26,9 +23,9 @@ const taskList: TaskListType = [
 
 const NavTaskList = () => {
   return (
-    <SidebarMenu>
+    <SidebarMenu className="gap-2 p-2">
       {taskList.map((item) => (
-        <SidebarMenuItem key={item.title} className="p-2">
+        <SidebarMenuItem key={item.title}>
           <SidebarMenuButton tooltip={item.title} className="flex">
             {item.icon && <item.icon />}
             <span className="flex-1">{item.title}</span>
@@ -36,6 +33,13 @@ const NavTaskList = () => {
           </SidebarMenuButton>
         </SidebarMenuItem>
       ))}
+      <Separator />
+      <SidebarMenuItem key={"btn-add-new-list"}>
+        <SidebarMenuButton tooltip={"Add New List"} className="flex">
+          {<PlusIcon />}
+          <span className="flex-1">Add New List</span>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
     </SidebarMenu>
   );
 };

@@ -4,7 +4,7 @@ import { Edit2, MoreVertical, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTodoStore } from "@/lib/store";
 import { format } from "date-fns";
-import AddTaskButton from "./add-task-button";
+import ButtonAddTask from "./button-add-task";
 import { Checkbox } from "./ui/checkbox";
 import {
   DropdownMenu,
@@ -14,22 +14,26 @@ import {
 } from "./ui/dropdown-menu";
 import { Button } from "./ui/button";
 import { SidebarTrigger } from "./ui/sidebar";
+import { useUser } from "@/hooks/use-user";
 
 export function TodoList() {
   const { todos, toggleTodo, deleteTodo } = useTodoStore();
+  const { user: userData } = useUser();
 
   return (
     <main className="flex-1 py-2">
       <SidebarTrigger size={"icon"} />
       <header className="flex items-center justify-between mb-8 max-w-4xl mx-auto pt-2 px-2">
         <div>
-          <h1 className="text-2xl font-bold">Good Morning, Iqbal! 👋</h1>
+          <h1 className="text-2xl font-bold">
+            Good Morning, {userData?.user_metadata?.name || userData?.email}! 👋
+          </h1>
           <p className="text-gray-500">
             Today, {format(new Date(), "EEE d MMMM yyyy")}
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <AddTaskButton />
+          <ButtonAddTask />
           {/* <Button variant={"outline"}>Today</Button> */}
         </div>
       </header>
