@@ -13,7 +13,8 @@ import { Label } from "@/components/ui/label";
 import { createClient } from "@/utils/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
-import { loginWithEmailAndPassword } from "./actions";
+import { loginWithEmailAndPassword } from "@/app/actions/auth";
+
 
 export default function LoginPage() {
   const { toast } = useToast();
