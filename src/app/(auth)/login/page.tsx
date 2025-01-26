@@ -9,15 +9,49 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { createClient } from "@/utils/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
 import { loginWithEmailAndPassword } from "@/app/actions/auth";
-
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import {
+  FormValuesLoginWithEmailAndPassword,
+  loginSchema,
+} from "@/schema/auth";
+import { useActionState, useEffect } from "react";
 
 export default function LoginPage() {
   const { toast } = useToast();
+  const [state, formAction, pending] = useActionState(
+    loginWithEmailAndPassword,
+    null
+  );
+  const form = useForm<FormValuesLoginWithEmailAndPassword>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
+
+  useEffect(() => {
+    if (state?.error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: state.error,
+      });
+    }
+  }, [state, toast]);
 
   const handleGoogleLogin = async () => {
     await createClient().auth.signInWithOAuth({
@@ -27,18 +61,6 @@ export default function LoginPage() {
       },
     });
   };
-
-  async function handleEmailLogin(formData: FormData) {
-    const result = await loginWithEmailAndPassword(formData);
-    
-    if (result.error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: result.error,
-      });
-    }
-  }
 
   return (
     <div className="flex min-h-screen items-center justify-center">
@@ -52,31 +74,46 @@ export default function LoginPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <form action={handleEmailLogin} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
+          <Form {...form}>
+            <form action={formAction} className="space-y-4">
+              <FormField
+                control={form.control}
                 name="email"
-                type="email"
-                placeholder="m@example.com"
-                required
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="email"
+                        placeholder="m@example.com"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
+
+              <FormField
+                control={form.control}
                 name="password"
-                type="password"
-                required
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Password</FormLabel>
+                    <FormControl>
+                      <Input type="password" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-            <Button type="submit" className="w-full">
-              Sign In
-            </Button>
-          </form>
-          
+
+              <Button type="submit" className="w-full" loading={pending}>
+                Sign In
+              </Button>
+            </form>
+          </Form>
+
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
               <span className="w-full border-t" />
