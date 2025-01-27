@@ -3,15 +3,17 @@ export interface TaskList {
   name: string;
   icon: string | null;
   description: string | null;
-  created_by: string;
   created_at: string;
   updated_at: string | null;
   deleted_at: string | null;
+  tasks?: Task[];
+  user_id: string;
+  task_count: number;
 }
 
 export interface Task {
   id: string;
-  title: string;
+  name: string;
   notes: string | null;
   start_date: string | null;
   end_date: string | null;

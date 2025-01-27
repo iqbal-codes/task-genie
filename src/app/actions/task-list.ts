@@ -2,23 +2,21 @@
 
 import { createServerActionClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
-import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { Database, TaskList } from "@/types/database";
+import { taskListSchema } from "@/schema/task-list";
+import { createClient } from "@/utils/supabase/server";
+import { ActionStateWithUser } from "@/hooks/use-action-state-with-user";
 
-const taskListSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  icon: z.string().optional(),
-  description: z.string().optional(),
-});
-
-export async function addTaskListAction(formData: FormData) {
+export async function addTaskListAction(
+  _state: ActionStateWithUser,
+  formData: FormData
+) {
   const formFields = {
     name: formData.get("name"),
     icon: formData.get("icon"),
     description: formData.get("description"),
   } as { [key: string]: string | undefined };
-
   const { name, icon, description } = formFields;
 
   const result = taskListSchema.safeParse({
@@ -30,29 +28,28 @@ export async function addTaskListAction(formData: FormData) {
     return { error: result.error.errors[0].message };
   }
 
-  const supabase = createServerActionClient<Database>({ cookies });
+  const supabase = await createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { error: "Unauthorized" };
-
-  const { error } = await supabase.from("task_lists").insert<Partial<TaskList>>([
-    {
-      name,
-      icon,
-      description,
-      created_by: user.id,
-    },
-  ]);
+  const { error } = await supabase
+    .from("task_lists")
+    .insert<Partial<TaskList>>([
+      {
+        name,
+        icon,
+        description,
+        user_id: _state?.userId,
+      },
+    ]);
 
   if (error) return { error: error.message };
 
-  revalidatePath("/");
   return { success: true };
 }
 
-export async function deleteTaskListAction(id: string) {
+export async function deleteTaskListAction(
+  _state: ActionStateWithUser,
+  id: string
+) {
   const supabase = createServerActionClient<Database>({ cookies });
 
   const { error } = await supabase
@@ -62,11 +59,13 @@ export async function deleteTaskListAction(id: string) {
 
   if (error) return { error: error.message };
 
-  revalidatePath("/");
   return { success: true };
 }
 
-export async function updateTaskListAction(formData: FormData) {
+export async function updateTaskListAction(
+  _state: ActionStateWithUser,
+  formData: FormData
+) {
   const formFields = {
     id: formData.get("id"),
     name: formData.get("name"),
@@ -88,11 +87,6 @@ export async function updateTaskListAction(formData: FormData) {
 
   const supabase = createServerActionClient<Database>({ cookies });
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { error: "Unauthorized" };
-
   const { error } = await supabase
     .from("task_lists")
     .update<Partial<TaskList>>({
@@ -108,42 +102,3 @@ export async function updateTaskListAction(formData: FormData) {
   return { success: true };
 }
 
-export async function getTaskListsAction() {
-  const supabase = createServerActionClient<Database>({ cookies });
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { error: "Unauthorized" };
-
-  const { data, error } = await supabase
-    .from("task_lists")
-    .select("*")
-    .is("deleted_at", null)
-    .eq("created_by", user.id);
-
-  if (error) return { error: error.message };
-
-  return { data };
-}
-
-export async function getTaskListByIdAction(id: string) {
-  const supabase = createServerActionClient<Database>({ cookies });
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { error: "Unauthorized" };
-
-  const { data, error } = await supabase
-    .from("task_lists")
-    .select("*")
-    .is("deleted_at", null)
-    .eq("id", id)
-    .eq("created_by", user.id)
-    .single();
-
-  if (error) return { error: error.message };
-
-  return { data };
-}
