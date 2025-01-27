@@ -5,28 +5,34 @@ import { NavUser } from "@/components/nav-user";
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarHeader,
   // SidebarHeader,
   SidebarRail,
   // useSidebar,
 } from "@/components/ui/sidebar";
 import NavTaskList from "./nav-task-list";
+import NavMain from "./nav-main";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   // const { open } = useSidebar();
   return (
     <Sidebar collapsible="icon" {...props}>
-      {/* <SidebarHeader>
-        <h1 className={`text-2xl font-bold p-2 ${!open ? "hidden" : ""}`}>
-          Private
-        </h1>
-      </SidebarHeader> */}
-      <SidebarContent>
-        <NavTaskList />
-      </SidebarContent>
-      <SidebarFooter>
+      <SidebarHeader>
         <NavUser />
-      </SidebarFooter>
+      </SidebarHeader>
+      <SidebarContent>
+        <SidebarGroup>
+          <NavMain />
+        </SidebarGroup>
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-base font-bold">
+            Task Lists
+          </SidebarGroupLabel>
+          <NavTaskList />
+        </SidebarGroup>
+      </SidebarContent>
       <SidebarRail />
     </Sidebar>
   );

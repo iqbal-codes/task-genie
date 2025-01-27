@@ -50,12 +50,12 @@ export function NavUser() {
               size="lg"
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
-              <Avatar className="h-8 w-8 rounded-lg">
+              <Avatar className="h-8 w-8 rounded-md">
                 <AvatarImage
                   src={userData?.user_metadata?.avatar_url}
                   alt={userData?.email}
                 />
-                <AvatarFallback className="rounded-lg">
+                <AvatarFallback className="rounded-md">
                   <UserIcon />
                 </AvatarFallback>
               </Avatar>
@@ -65,7 +65,6 @@ export function NavUser() {
                     userData?.email?.split("@")[0] ||
                     "User"}
                 </span>
-                <span className="truncate text-xs">{userData?.email}</span>
               </div>
               <ChevronsUpDown className="ml-auto size-4" />
             </SidebarMenuButton>
