@@ -29,6 +29,7 @@ import {
 import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/hooks/use-user";
+import { queryClient } from "@/lib/query-client";
 
 export function NavUser() {
   const supabase = createClient();
@@ -38,6 +39,7 @@ export function NavUser() {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
+    queryClient.clear(); // Clear all React Query cache
     router.refresh();
   };
 
