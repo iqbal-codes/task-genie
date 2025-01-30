@@ -13,21 +13,19 @@ import { TaskList } from "@/types/database";
 import { useState } from "react";
 import { ModalAddTaskList } from "./modal-add-task-list";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
-import { createClient } from "@/utils/supabase/client";
+import { usePathname } from "next/navigation";
+import Link from "next/link";
+import { getAllTaskLists } from "@/services/task-list.service";
 
 const NavTaskList = () => {
+  const pathname = usePathname();
   const [openModal, setOpenModal] = useState(false);
-  const supabase = createClient();
 
   const { data: taskLists, isLoading } = useQuery({
     queryKey: ["taskLists"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("task_lists").select(`
-          *,
-          task_count:tasks(count)
-        `);
+      const data = await getAllTaskLists()
 
-      if (error) throw error;
       return data?.map((item) => ({
         ...item,
         task_count: item.task_count?.[0]?.count ?? 0,
@@ -48,23 +46,32 @@ const NavTaskList = () => {
 
   return (
     <SidebarMenu>
-      {taskLists?.map((item) => (
-        <SidebarMenuItem key={item.id}>
-          <SidebarMenuButton tooltip={item.name} className="flex space-x-1">
-            {item.icon ? (
-              <div className="h-5 w-4 text-center">{item.icon}</div>
-            ) : (
-              <NotebookIcon />
-            )}
-            <span className="flex-1">{item.name}</span>
-            {item.task_count > 0 && (
-              <SidebarMenuBadge className="font-bold">
-                {item.task_count}
-              </SidebarMenuBadge>
-            )}
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-      ))}
+      {taskLists?.map((item) => {
+        const href = `/${item.name.replace(/\s+/g, "-")}-${
+          item.id.split("-")[0]
+        }`.toLowerCase();
+        return (
+          <SidebarMenuItem key={item.id}>
+            <Link href={`${href}`} className="w-full">
+              <SidebarMenuButton
+                tooltip={item.name}
+                className="flex space-x-1"
+                isActive={pathname === `${href}`}
+              >
+                {item.icon ? (
+                  <div className="h-5 w-4 text-center">{item.icon}</div>
+                ) : (
+                  <NotebookIcon />
+                )}
+                <span className="flex-1">{item.name}</span>
+              </SidebarMenuButton>
+              {item.task_count > 0 && (
+                <SidebarMenuBadge>{item.task_count}</SidebarMenuBadge>
+              )}
+            </Link>
+          </SidebarMenuItem>
+        );
+      })}
       <Separator />
       <SidebarMenuItem key={"btn-add-new-list"}>
         <Dialog open={openModal} onOpenChange={setOpenModal}>

@@ -9,7 +9,7 @@ import { createClient } from "@/utils/supabase/server";
 import { ActionStateWithUser } from "@/hooks/use-action-state-with-user";
 
 export async function addTaskListAction(
-  _state: ActionStateWithUser,
+  _state: Awaited<ActionStateWithUser> | null,
   formData: FormData
 ) {
   const formFields = {

@@ -4,42 +4,38 @@ import { revalidatePath } from "next/cache";
 import { Task } from "@/types/database";
 import { taskSchema, FormValuesTask } from "@/schema/task";
 import { createClient } from "@/utils/supabase/server";
-import { User } from "@supabase/supabase-js";
-import { queryClient } from "@/lib/query-client";
+import { ActionStateWithUser } from "@/hooks/use-action-state-with-user";
 
-export async function addtaskAction(formData: FormValuesTask) {
-  const { name, notes, date, task_list_id } = formData;
+export async function addTaskAction(
+  _state: Awaited<ActionStateWithUser> | null,
+  formData: FormData
+) {
+  const formFields = Object.fromEntries(formData.entries());
+  const { name, notes, due_date, task_list_id, reminder } =
+    formFields as unknown as FormValuesTask;
 
   const result = taskSchema.safeParse({
     name,
     notes,
-    date,
+    due_date: due_date ? new Date(due_date) : null,
     task_list_id,
+    reminder: reminder ? new Date(reminder) : null,
   });
+
   if (!result.success) {
     return { error: result.error.errors[0].message };
   }
 
-  const userData = queryClient.getQueriesData({
-    queryKey: ["user"],
-  });
-
-  console.log({ userData });
-
-  if (!userData) return { error: "Unauthorized" };
-
   const supabase = await createClient();
 
-  const { error } = await supabase.from("tasks").insert<Partial<Task>>([
-    {
-      name,
-      notes,
-      start_date: date?.from?.toISOString() || null,
-      end_date: date?.to?.toISOString() || null,
-      task_list_id,
-      // user_id: userData.data?.id,
-    },
-  ]);
+  const { error } = await supabase.from("tasks").insert({
+    name,
+    notes,
+    due_date: due_date ? new Date(due_date).toISOString() : null,
+    task_list_id: task_list_id === "inbox" ? null : task_list_id,
+    user_id: _state?.userId,
+    reminder: reminder ? new Date(reminder).toISOString() : null,
+  });
 
   if (error) return { error: error.message };
 
@@ -67,17 +63,17 @@ export async function updateTaskAction(formData: FormData) {
     name: formData.get("name"),
     notes: formData.get("notes"),
     start_date: formData.get("start_date"),
-    end_date: formData.get("end_date"),
+    due_date: formData.get("due_date"),
     task_list_id: formData.get("task_list_id"),
   } as { [key: string]: string | undefined };
 
-  const { id, name, notes, start_date, end_date, task_list_id } = formFields;
+  const { id, name, notes, start_date, due_date, task_list_id } = formFields;
 
   const result = taskSchema.safeParse({
     name,
     notes,
     start_date,
-    end_date,
+    due_date,
     task_list_id,
   });
 
@@ -97,8 +93,7 @@ export async function updateTaskAction(formData: FormData) {
     .update<Partial<Task>>({
       name,
       notes,
-      start_date: start_date || null,
-      end_date: end_date || null,
+
       task_list_id,
     })
     .eq("id", id);

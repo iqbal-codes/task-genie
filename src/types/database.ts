@@ -15,11 +15,11 @@ export interface Task {
   id: string;
   name: string;
   notes: string | null;
-  start_date: string | null;
-  end_date: string | null;
+  due_date: string | null;
   task_list_id: string;
   user_id: string;
   completed: boolean;
+  reminder: string;
   created_at: string;
   updated_at: string | null;
   deleted_at: string | null;
@@ -30,13 +30,13 @@ export type Database = {
     Tables: {
       tasks: {
         Row: Task;
-        Insert: Omit<Task, 'id' | 'created_at' | 'updated_at'>;
-        Update: Partial<Omit<Task, 'id' | 'created_at' | 'updated_at'>>;
+        Insert: Omit<Task, "id" | "created_at" | "updated_at">;
+        Update: Partial<Omit<Task, "id" | "created_at" | "updated_at">>;
       };
       task_lists: {
         Row: TaskList;
-        Insert: Omit<TaskList, 'id' | 'created_at' | 'updated_at'>;
-        Update: Partial<Omit<TaskList, 'id' | 'created_at' | 'updated_at'>>;
+        Insert: Omit<TaskList, "id" | "created_at" | "updated_at">;
+        Update: Partial<Omit<TaskList, "id" | "created_at" | "updated_at">>;
       };
     };
   };

@@ -22,23 +22,16 @@ import {
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Textarea } from "./ui/textarea";
-import { z } from "zod";
 import { IconPicker } from "./ui/icon-picker";
-import { useQueryClient } from "@tanstack/react-query";
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { useActionStateWithUser } from "@/hooks/use-action-state-with-user";
+import { FormValuesTaskList, taskListSchema } from "@/schema/task-list";
+import { queryClient } from "@/lib/query-client";
+import { FormFieldComplex } from "./ui/form-field-complex";
 
 interface ModalAddTaskListProps {
   setOpen: (open: boolean) => void;
 }
-
-const formSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  description: z.string().optional(),
-  icon: z.string().min(1, "Icon is required"),
-});
-
-type FormValues = z.infer<typeof formSchema>;
 
 const FORM_DEFAULT_VALUE = {
   name: "",
@@ -47,13 +40,12 @@ const FORM_DEFAULT_VALUE = {
 
 export const ModalAddTaskList = ({ setOpen }: ModalAddTaskListProps) => {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
   const [state, formAction, pending] = useActionStateWithUser(
     addTaskListAction,
     null
   );
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<FormValuesTaskList>({
+    resolver: zodResolver(taskListSchema),
     defaultValues: FORM_DEFAULT_VALUE,
   });
 
@@ -73,9 +65,7 @@ export const ModalAddTaskList = ({ setOpen }: ModalAddTaskListProps) => {
       form.reset(FORM_DEFAULT_VALUE);
       setOpen(false);
     }
-  }, [state, toast, queryClient, setOpen, form]);
-
-  const formRef = useRef<HTMLFormElement>(null);
+  }, [state, toast, setOpen, form]);
 
   return (
     <DialogContent className="sm:max-w-[425px]">
@@ -86,11 +76,12 @@ export const ModalAddTaskList = ({ setOpen }: ModalAddTaskListProps) => {
         </DialogDescription>
       </DialogHeader>
       <Form {...form}>
-        <form ref={formRef} action={formAction} className="space-y-4">
+        <form action={formAction} className="space-y-4">
           <div className="space-y-2">
             <FormLabel>List Name</FormLabel>
             <div className="flex gap-2">
-              <FormField
+              <FormFieldComplex
+                form={form}
                 control={form.control}
                 name="icon"
                 render={({ field }) => (
@@ -105,7 +96,6 @@ export const ModalAddTaskList = ({ setOpen }: ModalAddTaskListProps) => {
                   </FormItem>
                 )}
               />
-              <input type="hidden" name="icon" value={form.getValues("icon")} />
               <FormField
                 control={form.control}
                 name="name"

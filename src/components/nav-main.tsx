@@ -1,51 +1,47 @@
 "use client";
 
-import { Calendar, CalendarDays, List } from "lucide-react";
+import { Calendar, CalendarDays, Inbox } from "lucide-react";
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "./ui/sidebar";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
+
+const NAVIGATION_LIST = [
+  {
+    label: "Inbox",
+    href: "/inbox",
+    icon: Inbox,
+  },
+  {
+    label: "Today",
+    href: "/today",
+    icon: Calendar,
+  },
+  {
+    label: "Upcoming",
+    href: "/upcoming",
+    icon: CalendarDays,
+  },
+];
 
 const NavMain = () => {
   const pathname = usePathname();
 
   return (
     <SidebarMenu className="">
-      <SidebarMenuItem>
-        <Link href="/all" className="w-full">
-          <SidebarMenuButton
-            tooltip="Inbox"
-            className="flex space-x-1"
-            isActive={pathname === "/all"}
-          >
-            <List />
-            <span className="flex-1">All Tasks</span>
-          </SidebarMenuButton>
-        </Link>
-      </SidebarMenuItem>
-      <SidebarMenuItem>
-        <Link href="/today" className="w-full">
-          <SidebarMenuButton
-            tooltip="Today"
-            className="flex space-x-1"
-            isActive={pathname === "/today"}
-          >
-            <Calendar />
-            <span className="flex-1">Today</span>
-          </SidebarMenuButton>
-        </Link>
-      </SidebarMenuItem>
-      <SidebarMenuItem>
-        <Link href="/upcoming" className="w-full">
-          <SidebarMenuButton
-            tooltip="Upcoming"
-            className="flex space-x-1"
-            isActive={pathname === "/upcoming"}
-          >
-            <CalendarDays />
-            <span className="flex-1">Upcoming</span>
-          </SidebarMenuButton>
-        </Link>
-      </SidebarMenuItem>
+      {NAVIGATION_LIST.map((item) => (
+        <SidebarMenuItem key={item.href}>
+          <Link href={item.href} className="w-full">
+            <SidebarMenuButton
+              tooltip="Inbox"
+              className="flex space-x-1"
+              isActive={pathname === item.href}
+            >
+              <item.icon />
+              <span className="flex-1">{item.label}</span>
+            </SidebarMenuButton>
+          </Link>
+        </SidebarMenuItem>
+      ))}
     </SidebarMenu>
   );
 };
