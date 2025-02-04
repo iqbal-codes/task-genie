@@ -1,9 +1,6 @@
 import { ContainerTaskList } from "@/components/container-tasklist";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { notFound } from "next/navigation";
 import { Suspense } from "react";
-
-const validViews = ["inbox", "today", "upcoming"];
 
 interface PageProps {
   params: Promise<{
@@ -13,10 +10,6 @@ interface PageProps {
 
 export default async function TaskViewPage({ params }: PageProps) {
   const { view } = await params;
-
-  if (!validViews.includes(view)) {
-    notFound();
-  }
 
   return (
     <Suspense>

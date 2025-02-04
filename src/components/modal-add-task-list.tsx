@@ -1,6 +1,5 @@
 "use client";
 
-import { addTaskListAction } from "@/app/actions/task-list";
 import { useToast } from "@/hooks/use-toast";
 import {
   DialogContent,
@@ -23,11 +22,9 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Textarea } from "./ui/textarea";
 import { IconPicker } from "./ui/icon-picker";
-import { useEffect } from "react";
-import { useActionStateWithUser } from "@/hooks/use-action-state-with-user";
 import { FormValuesTaskList, taskListSchema } from "@/schema/task-list";
-import { queryClient } from "@/lib/query-client";
 import { FormFieldComplex } from "./ui/form-field-complex";
+import { addTaskList } from "@/services/task-list.service";
 
 interface ModalAddTaskListProps {
   setOpen: (open: boolean) => void;
@@ -40,32 +37,29 @@ const FORM_DEFAULT_VALUE = {
 
 export const ModalAddTaskList = ({ setOpen }: ModalAddTaskListProps) => {
   const { toast } = useToast();
-  const [state, formAction, pending] = useActionStateWithUser(
-    addTaskListAction,
-    null
-  );
   const form = useForm<FormValuesTaskList>({
     resolver: zodResolver(taskListSchema),
     defaultValues: FORM_DEFAULT_VALUE,
   });
 
-  useEffect(() => {
-    if (state?.error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: state.error,
-      });
-    } else if (state?.success) {
+  const onSubmit = async (data: FormValuesTaskList) => {
+    try {
+      await addTaskList(data);
       toast({
         title: "Success",
         description: "Task list added successfully",
       });
-      queryClient.invalidateQueries({ queryKey: ["taskLists"] });
       form.reset(FORM_DEFAULT_VALUE);
       setOpen(false);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description:
+          error instanceof Error ? error.message : "Failed to add task list",
+      });
     }
-  }, [state, toast, setOpen, form]);
+  };
 
   return (
     <DialogContent className="sm:max-w-[425px]">
@@ -76,7 +70,7 @@ export const ModalAddTaskList = ({ setOpen }: ModalAddTaskListProps) => {
         </DialogDescription>
       </DialogHeader>
       <Form {...form}>
-        <form action={formAction} className="space-y-4">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
             <FormLabel>List Name</FormLabel>
             <div className="flex gap-2">
@@ -129,9 +123,7 @@ export const ModalAddTaskList = ({ setOpen }: ModalAddTaskListProps) => {
             )}
           />
           <DialogFooter>
-            <Button type="submit" loading={pending}>
-              Create List
-            </Button>
+            <Button type="submit">Create List</Button>
           </DialogFooter>
         </form>
       </Form>

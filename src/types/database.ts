@@ -8,7 +8,7 @@ export interface TaskList {
   deleted_at: string | null;
   tasks?: Task[];
   user_id: string;
-  task_count: number;
+  task_count?: number;
 }
 
 export interface Task {

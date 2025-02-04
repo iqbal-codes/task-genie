@@ -1,6 +1,5 @@
 import { cn } from "@/lib/utils";
 import { Checkbox } from "./ui/checkbox";
-import { deletetaskAction, toggleTaskAction } from "@/app/actions/task";
 import { Task } from "@/types/database";
 import {
   DropdownMenu,
@@ -10,20 +9,52 @@ import {
 } from "./ui/dropdown-menu";
 import { Button } from "./ui/button";
 import { Edit2, MoreVertical, Trash2 } from "lucide-react";
-import { queryClient } from "@/lib/query-client";
+import { toggleTask, deleteTask, updateTask } from "@/services/task.service";
+import { useToast } from "@/hooks/use-toast";
 
 export type TaskItemProps = {
   task: Task;
 };
 
 export const TaskItem = ({ task }: TaskItemProps) => {
+  const { toast } = useToast();
+
   const handleToggle = async (id: string, completed: boolean) => {
-    await toggleTaskAction(id, completed);
-    queryClient.invalidateQueries({ queryKey: ["tasks"] });
+    const previousState = task.completed;
+    await toggleTask(id, !completed);
+    toast({
+      title: completed ? "Task uncompleted" : "Task completed",
+      action: (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={async () => {
+            await updateTask(id, { completed: previousState });
+          }}
+        >
+          Undo
+        </Button>
+      ),
+    });
   };
 
   const handleDelete = async (id: string) => {
-    await deletetaskAction(id);
+    await deleteTask(id);
+
+    toast({
+      title: "Task successfully deleted",
+      action: (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={async () => {
+            await updateTask(id, { deleted_at: null });
+          }}
+        >
+          Undo
+        </Button>
+      ),
+    });
   };
 
   return (

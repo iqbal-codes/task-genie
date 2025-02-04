@@ -1,17 +1,14 @@
-import { InboxIcon, RepeatIcon } from "lucide-react";
+import { InboxIcon, PlusCircleIcon, RepeatIcon } from "lucide-react";
 import { Input } from "./ui/input";
 import { Separator } from "./ui/separator";
 import { Button } from "./ui/button";
-import { useQuery } from "@tanstack/react-query";
 import { getAllTaskLists } from "@/services/task-list.service";
-import { useActionStateWithUser } from "@/hooks/use-action-state-with-user";
-import { addTaskAction } from "@/app/actions/task";
 import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import { FormValuesTask, taskSchema } from "@/schema/task";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { queryClient } from "@/lib/query-client";
-import { useEffect } from "react";
+import { useState } from "react";
 import { Form, FormControl, FormField, FormItem } from "./ui/form";
 import {
   Select,
@@ -25,6 +22,9 @@ import {
 import { ReminderField } from "./reminder-field";
 import { FormFieldComplex } from "./ui/form-field-complex";
 import { DueDateField } from "./due-date-field";
+import { addTask } from "@/services/task.service";
+import { useMutation } from "@tanstack/react-query";
+import { useLiveQuery } from "dexie-react-hooks";
 
 const FORM_DEFAULT_VALUE: FormValuesTask = {
   name: "",
@@ -35,12 +35,33 @@ const FORM_DEFAULT_VALUE: FormValuesTask = {
 };
 
 export const AddTaskField = () => {
-  const { data: taskLists } = useQuery({
-    queryKey: ["tasklists"],
-    queryFn: () => getAllTaskLists(),
+  const [inputFieldVisible, setInputFieldVisible] = useState(false);
+
+  const taskLists = useLiveQuery(() => getAllTaskLists());
+
+  const addTaskMutation = useMutation({
+    mutationFn: addTask,
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Task added successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      form.reset(FORM_DEFAULT_VALUE);
+      setInputFieldVisible(false);
+    },
+    onError: (error) => {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message,
+      });
+    },
   });
 
-  const [state, formAction] = useActionStateWithUser(addTaskAction, null);
+  const onSubmit = (formValues: FormValuesTask) => {
+    addTaskMutation.mutate(formValues);
+  };
 
   const { toast } = useToast();
   const form = useForm<FormValuesTask>({
@@ -48,26 +69,21 @@ export const AddTaskField = () => {
     defaultValues: FORM_DEFAULT_VALUE,
   });
 
-  useEffect(() => {
-    if (state?.error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: state.error,
-      });
-    } else if (state?.success) {
-      toast({
-        title: "Success",
-        description: "Task list added successfully",
-      });
-      queryClient.invalidateQueries({ queryKey: ["tasks"] });
-      form.reset(FORM_DEFAULT_VALUE);
-    }
-  }, [state, toast, form]);
+  if (!inputFieldVisible)
+    return (
+      <Button
+        onClick={() => setInputFieldVisible(true)}
+        variant={"ghost"}
+        className="hover:text-indigo-500"
+      >
+        <PlusCircleIcon />
+        Add Task
+      </Button>
+    );
 
   return (
     <Form {...form}>
-      <form action={formAction}>
+      <form onSubmit={form.handleSubmit(onSubmit)}>
         <li
           key={"add-task"}
           className="flex flex-col p-2 bg-white rounded-md shadow gap-2"
@@ -154,9 +170,19 @@ export const AddTaskField = () => {
                 )}
               />
             </div>
-            <Button size="sm" type="submit" disabled={!form.watch("name")}>
-              Add Task
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                variant="secondary"
+                type="submit"
+                onClick={() => setInputFieldVisible(false)}
+              >
+                Cancel
+              </Button>
+              <Button size="sm" type="submit" disabled={!form.watch("name")}>
+                Add Task
+              </Button>
+            </div>
           </div>
         </li>
       </form>
